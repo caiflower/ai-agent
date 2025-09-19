@@ -1,0 +1,99 @@
+web:
+  - name: default
+    port: 8080
+    rootPath:
+    headerTraceID: X-Request-Id # trace_id
+    web_limiter: # web qos limiter
+      enable: true
+      qos: 1000
+    enablePprof: false # 是否开启pprof
+
+logger:
+  level: INFO
+  trace: true                   # logger traceId
+  timeFormat:                   # timeFormat
+  path:                         # logger path, if not set std
+  fileName: app.log             # loggerFile
+  rollingPolicy: timeAndSize    # timeAndSize time size
+  maxSize: 500MB                # loggerFileMaxSize
+  maxTime: 24h                  # loggerFileMaxTime
+  compress: True                # compress loggerFile
+  cleanBackup: True             # cleanup backup loggerFile
+  backupMaxCount: 10            # backup loggerFile maxCount
+  backupMaxDiskSize: 10GB       # backup loggerFile maxDiskSize
+  color: True                   # logger color
+
+database:
+  - dialect: mysql
+    url: 127.0.0.1:3306
+    dbName: test
+    user: root
+    password: root
+    debug: true                  # print SQL
+    charset: utf8mb4
+    maxOpen: 200
+    maxIdle: 20
+    connMaxLifetime: 28800      # unit: s
+
+http_client:
+  verbose: false
+
+# cluster config
+cluster:
+  enable: True
+  mode: single # single/cluster/redis
+  nodes:
+    - name: localhost1
+      ip: 127.0.0.1
+      port: 9001
+    - name: localhost2
+      ip: 127.0.0.1
+      port: 9002
+    - name: localhost3
+      ip: 127.0.0.1
+      port: 9003
+  redisDiscovery:
+    beanName:
+    dataPath: /demo-api
+    electionInterval: 15s
+    electionPeriod: 30s
+    SyncLeaderInterval: 10s
+
+# redis config
+redis:
+  - mode:
+    addrs:
+      - 127.0.0.1
+    password:
+    readTimeout: 10s
+    writeTimeout: 20s
+    poolSize:
+    minIdleConns: 20
+    maxConnAge: 80s
+
+# kafka config
+kafka:
+  - name: consumer
+    enable: false
+    bootstrapServers:
+      - 127.0.0.1:9092
+    groupId: testGroup4
+    topics:
+      - testTopic
+    securityProtocol: SASL_PLAINTEXT
+    saslMechanism: SCRAM-SHA-256
+    saslUsername: user1
+    saslPassword:
+    consumerAutoOffsetReset: earliest
+  - name: producer
+    enable: false
+    bootstrapServers:
+      - 127.0.0.1:9092
+    groupId: testGroup4
+    topics:
+      - testTopic
+    securityProtocol: SASL_PLAINTEXT
+    saslMechanism: SCRAM-SHA-256
+    saslUsername: user1
+    saslPassword:
+    consumerAutoOffsetReset: earliest
