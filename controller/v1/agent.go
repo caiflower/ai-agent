@@ -2,92 +2,93 @@ package v1
 
 import (
 	"context"
-	"log/slog"
 	"math/rand"
-	"net/http"
-	"os"
 	"strconv"
 	"time"
 
 	"github.com/caiflower/ai-agent/controller"
 	apiv1 "github.com/caiflower/ai-agent/model/api/v1"
+	"github.com/caiflower/common-tools/pkg/logger"
+	"github.com/caiflower/common-tools/web"
 	"github.com/caiflower/common-tools/web/e"
 	"github.com/tmaxmax/go-sse"
 )
 
-var (
-	logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
-)
-
 type agentController struct {
+	SSEProvider sse.Provider `autowired:""`
 }
 
 func NewAgentController() controller.AgentController {
 	return &agentController{}
 }
 
+func (c *agentController) Close() {
+	if c.SSEProvider != nil {
+		if err := c.SSEProvider.Shutdown(context.Background()); err != nil {
+			logger.Error("shutdown SSE provider failed. Error: %v", err)
+		} else {
+			logger.Info("shutdown SSE provider success.")
+		}
+	}
+}
+
 func (c *agentController) Scheduling(request *apiv1.SchedulingRequest) (err e.ApiError) {
-	sseSever := newSSE(request)
-	ctx, cancelFunc := context.WithCancel(context.Background())
-	defer sseSever.Shutdown(context.Background())
+	sessionIds := []string{request.SessionId}
 
 	go func() {
 		cnt := 0
 		for {
-			select {
-			case <-ctx.Done():
+			time.Sleep(time.Second)
 
-			default:
-				time.Sleep(time.Second)
-				if cnt == 3 {
-					message := &sse.Message{
-						Type: sse.Type("close"),
-					}
-					_ = sseSever.Publish(message, request.UserId)
-					return
+			if cnt == 3 {
+				message := &sse.Message{
+					Type: sse.Type("close"),
 				}
+				_ = c.SSEProvider.Publish(message, sessionIds)
 
-				cnt++
-				err1 := sseSever.Publish(generateRandomNumbers(), request.UserId)
-				if err1 != nil {
-					logger.Error("publish err", err1)
-				}
+				logger.Info("sessionIds %s closed", sessionIds)
+				return
 			}
 
+			err1 := c.SSEProvider.Publish(generateRandomNumbers(request.SessionId), sessionIds)
+			if err1 != nil {
+				logger.Error("publish failed. Error: %v", err1)
+			}
+			cnt++
 		}
 	}()
 
-	sseSever.ServeHTTP(request.GetResponseWriterAndRequest())
-	cancelFunc()
+	sseErr := c.beginSse(sessionIds, &request.Context)
+	if sseErr != nil {
+		return e.NewInternalError(sseErr)
+	}
+
+	return
+}
+
+func (c *agentController) beginSse(sessionIds []string, webCtx *web.Context) error {
+	logger.Info("beginSse sessionIds %s", sessionIds)
+	w, r := webCtx.GetResponseWriterAndRequest()
+	sess, err := sse.Upgrade(w, r)
+	if err != nil {
+		logger.Error("upgrade sse failed. Error: %v", err)
+		return err
+	}
+
+	sub := sse.Subscription{Client: sess, LastEventID: sess.LastEventID, Topics: sessionIds}
+
+	err = c.SSEProvider.Subscribe(r.Context(), sub)
+	if err != nil {
+		logger.Error("sse subscribe failed. Error: %v", err)
+		return err
+	}
 
 	return nil
 }
 
-func newSSE(request *apiv1.SchedulingRequest) *sse.Server {
-	rp, _ := sse.NewValidReplayer(time.Minute*5, true)
-	rp.GCInterval = time.Minute
-
-	return &sse.Server{
-		Provider: &sse.Joe{Replayer: rp},
-		// If you are using a 3rd party library to generate a per-request logger, this
-		// can just be a simple wrapper over it.
-		Logger: func(r *http.Request) *slog.Logger {
-			return logger.With("userId", request.UserId).With("reqId", request.RequestId)
-		},
-		OnSession: func(w http.ResponseWriter, r *http.Request) (topics []string, permitted bool) {
-			// the shutdown message is sent on the default topic
-			return []string{request.UserId}, true
-		},
-	}
-}
-
-func generateRandomNumbers() *sse.Message {
+func generateRandomNumbers(sessionId string) *sse.Message {
 	message := &sse.Message{}
-	count := 1 + rand.Intn(5)
-
-	for i := 0; i < count; i++ {
-		message.AppendData(strconv.FormatUint(rand.Uint64(), 10))
-	}
+	message.AppendData(sessionId + ":" + strconv.FormatUint(rand.Uint64(), 10))
 
 	return message
 }

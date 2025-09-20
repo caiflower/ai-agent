@@ -5,7 +5,7 @@ go 1.22
 replace github.com/json-iterator/go v1.1.12 => github.com/caiflower/json-iterator v1.1.12
 
 require (
-	github.com/caiflower/common-tools v0.0.0-20250915074600-217b41a19a47
+	github.com/caiflower/common-tools v0.0.0-20250920071433-b3ad268dbca3
 	github.com/tmaxmax/go-sse v0.11.0
 )
 

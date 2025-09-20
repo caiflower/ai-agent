@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/caiflower/ai-agent/constants"
 	"github.com/caiflower/ai-agent/controller/v1"
@@ -16,6 +17,7 @@ import (
 	"github.com/caiflower/common-tools/pkg/logger"
 	"github.com/caiflower/common-tools/redis/v1"
 	"github.com/caiflower/common-tools/web/v1"
+	"github.com/tmaxmax/go-sse"
 )
 
 func init() {
@@ -37,7 +39,9 @@ func init() {
 
 func addController() {
 	webv1.AddController(v1.NewHealthController())
-	webv1.AddController(v1.NewAgentController())
+	agentController := v1.NewAgentController()
+	webv1.AddController(agentController)
+	global.DefaultResourceManger.Add(agentController)
 }
 
 func setBean() {
@@ -47,6 +51,7 @@ func setBean() {
 	// init dao
 
 	// init service
+	bean.AddBean(newSSEProvider())
 }
 
 func initCluster() {
@@ -83,6 +88,23 @@ func initKafka() {
 
 	producer := kafkav2.NewProducerClient(constants.DefaultConfig.KafkaConfig[0])
 	bean.SetBean("producer", producer)
+}
+
+func newSSEProvider() sse.Provider {
+	rp, _ := sse.NewValidReplayer(time.Minute*5, true)
+	rp.GCInterval = time.Minute
+
+	//server := &sse.Server{
+	//	Provider: &sse.Joe{Replayer: rp},
+	//	Logger: func(r *nethttp.Request) *slog.Logger {
+	//		return slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	//	},
+	//	OnSession: func(w nethttp.ResponseWriter, r *nethttp.Request) (topics []string, permitted bool) {
+	//		return []string{}, true
+	//	},
+	//}
+	//server.ServeHTTP()
+	return &sse.Joe{Replayer: rp}
 }
 
 func main() {

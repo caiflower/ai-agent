@@ -46,8 +46,8 @@ github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
-github.com/caiflower/common-tools v0.0.0-20250915074600-217b41a19a47 h1:zzeTjyvYJ59Lx15Gk5XO99ICf4kzB4ZwJol6HPm6z+Q=
-github.com/caiflower/common-tools v0.0.0-20250915074600-217b41a19a47/go.mod h1:Xe/ik4/bJr0g7BmWrfsZKGHEPfDwtdalU53t/kozpqs=
+github.com/caiflower/common-tools v0.0.0-20250920071433-b3ad268dbca3 h1:sZysN2nZeWlr0s6NN+xiEVRMsMB77iaVHNBWV28ajjw=
+github.com/caiflower/common-tools v0.0.0-20250920071433-b3ad268dbca3/go.mod h1:Xe/ik4/bJr0g7BmWrfsZKGHEPfDwtdalU53t/kozpqs=
 github.com/caiflower/json-iterator v1.1.12 h1:WpdqSe44A9GKcTNw7DkDNNJUQNM7tM4RHbNRx5edkjQ=
 github.com/caiflower/json-iterator v1.1.12/go.mod h1:5ADwiSgC1VslIB/m72eUebZfXV/cUSEE7ZGntUPpmz8=
 github.com/cenkalti/backoff/v4 v4.3.0 h1:MyRJ/UdXutAwSAT+s3wNd7MfTIcy71VQueUuFK343L8=

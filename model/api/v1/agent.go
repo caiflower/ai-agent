@@ -8,6 +8,7 @@ import (
 type SchedulingRequest struct {
 	api.Request
 	web.Context
+	SessionId string `verf:""`
 }
 
 type SchedulingResponse struct {

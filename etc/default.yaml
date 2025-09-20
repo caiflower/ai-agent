@@ -22,6 +22,7 @@ logger:
   backupMaxCount: 10            # backup loggerFile maxCount
   backupMaxDiskSize: 10GB       # backup loggerFile maxDiskSize
   color: True                   # logger color
+  appenderNum: 1
 
 database:
   - dialect: mysql

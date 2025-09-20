@@ -11,4 +11,5 @@ type HealthController interface {
 
 type AgentController interface {
 	Scheduling(request *apiv1.SchedulingRequest) (err e.ApiError)
+	Close()
 }
