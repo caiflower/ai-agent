@@ -8,5 +8,5 @@ import (
 
 func register() {
 	Register(NewRestFul().Method(http.MethodGet).Version("v1").Controller("v1.healthController").Path("/healthz").Action("DescribeHealth"))
-	Register(NewRestFul().Method(http.MethodGet).Version("v1").Controller("v1.agentController").Path("/agents:scheduling").Action("Scheduling"))
+	Register(NewRestFul().Method(http.MethodGet).Version("v1").Controller("v1.agentController").Path("/chat").Action("Chat"))
 }

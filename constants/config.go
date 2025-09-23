@@ -17,5 +17,10 @@ func InitConfig() {
 }
 
 type Config struct {
-	CallerInterval int `yaml:"caller_interval"`
+	Llama Llama
+}
+
+type Llama struct {
+	AgentName string `yaml:"agentName"`
+	OllamaUrl string `yaml:"ollamaUrl"`
 }

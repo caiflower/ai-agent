@@ -1,6 +1,6 @@
 package api
 
 type Request struct {
-	RequestId string `header:"X-Request-Id"`
-	UserId    string `header:"X-User-Id"`
+	RequestID string `header:"X-Request-Id"`
+	User      string `header:"X-User-Id"`
 }

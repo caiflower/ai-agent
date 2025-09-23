@@ -10,6 +10,6 @@ type HealthController interface {
 }
 
 type AgentController interface {
-	Scheduling(request *apiv1.SchedulingRequest) (err e.ApiError)
+	Chat(request *apiv1.ChatRequest) (err e.ApiError)
 	Close()
 }

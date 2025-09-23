@@ -2,20 +2,29 @@ package v1
 
 import (
 	"context"
-	"math/rand"
-	"strconv"
-	"time"
+	"io"
 
 	"github.com/caiflower/ai-agent/controller"
 	apiv1 "github.com/caiflower/ai-agent/model/api/v1"
+	entity "github.com/caiflower/ai-agent/model/entity"
+	"github.com/caiflower/ai-agent/service/agent"
 	"github.com/caiflower/common-tools/pkg/logger"
+	"github.com/caiflower/common-tools/pkg/safego"
 	"github.com/caiflower/common-tools/web"
 	"github.com/caiflower/common-tools/web/e"
+	"github.com/cloudwego/eino/schema"
 	"github.com/tmaxmax/go-sse"
 )
 
+const (
+	EventTypeOfChatModelAnswer = "chat.answer"
+	EventTypeOfChatError       = "chat.error"
+	EventTypeOfChatFinish      = "chat.finish"
+)
+
 type agentController struct {
-	SSEProvider sse.Provider `autowired:""`
+	SSEProvider  sse.Provider  `autowired:""`
+	AgentRuntime agent.Runtime `autowired:""`
 }
 
 func NewAgentController() controller.AgentController {
@@ -32,38 +41,58 @@ func (c *agentController) Close() {
 	}
 }
 
-func (c *agentController) Scheduling(request *apiv1.SchedulingRequest) (err e.ApiError) {
-	sessionIds := []string{request.SessionId}
+func (c *agentController) Chat(request *apiv1.ChatRequest) e.ApiError {
+	var (
+		topics = []string{request.RequestID}
+	)
 
-	go func() {
-		cnt := 0
+	sr, err := c.AgentRuntime.Run(&entity.AgentRequest{
+		Input: schema.UserMessage(request.Input),
+	})
+	if err != nil {
+		logger.Error("agent run failed. Error: %v", err)
+		return e.NewInternalError(err)
+	}
+
+	safego.Go(func() {
 		for {
-			time.Sleep(time.Second)
-
-			if cnt == 3 {
-				message := &sse.Message{
-					Type: sse.Type("close"),
+			chatEventRecv, recvErr := sr.Recv()
+			if recvErr != nil {
+				if recvErr == io.EOF {
+					_ = c.SSEProvider.Publish(buildChatMessage(EventTypeOfChatFinish, "finish"), topics)
+					break
 				}
-				_ = c.SSEProvider.Publish(message, sessionIds)
-
-				logger.Info("sessionIds %s closed", sessionIds)
+				_ = c.SSEProvider.Publish(buildChatMessage(EventTypeOfChatError, "chat failed"), topics)
+				logger.Error("chat receive failed. Error: %v", recvErr)
 				return
 			}
 
-			err1 := c.SSEProvider.Publish(generateRandomNumbers(request.SessionId), sessionIds)
-			if err1 != nil {
-				logger.Error("publish failed. Error: %v", err1)
+			switch chatEventRecv.EventType {
+			case entity.EventTypeOfChatModelAnswer:
+				for {
+					message, recvErr := chatEventRecv.ChatModelAnswer.Recv()
+					if recvErr != nil {
+						if recvErr == io.EOF {
+							break
+						}
+						_ = c.SSEProvider.Publish(buildChatMessage(EventTypeOfChatError, "chat failed"), topics)
+						logger.Error("chat receive failed. Error: %v", recvErr)
+						return
+					}
+					_ = c.SSEProvider.Publish(buildChatAnswerMessage(message), topics)
+				}
+			default:
+				logger.Warn("chat receive unknown event: %v", chatEventRecv.EventType)
 			}
-			cnt++
 		}
-	}()
+	})
 
-	sseErr := c.beginSse(sessionIds, &request.Context)
+	sseErr := c.beginSse(topics, &request.Context)
 	if sseErr != nil {
 		return e.NewInternalError(sseErr)
 	}
 
-	return
+	return nil
 }
 
 func (c *agentController) beginSse(sessionIds []string, webCtx *web.Context) error {
@@ -71,7 +100,7 @@ func (c *agentController) beginSse(sessionIds []string, webCtx *web.Context) err
 	w, r := webCtx.GetResponseWriterAndRequest()
 	sess, err := sse.Upgrade(w, r)
 	if err != nil {
-		logger.Error("upgrade sse failed. Error: %v", err)
+		logger.Error("upgrade xsse failed. Error: %v", err)
 		return err
 	}
 
@@ -79,16 +108,27 @@ func (c *agentController) beginSse(sessionIds []string, webCtx *web.Context) err
 
 	err = c.SSEProvider.Subscribe(r.Context(), sub)
 	if err != nil {
-		logger.Error("sse subscribe failed. Error: %v", err)
+		logger.Error("xsse subscribe failed. Error: %v", err)
 		return err
 	}
 
 	return nil
 }
 
-func generateRandomNumbers(sessionId string) *sse.Message {
-	message := &sse.Message{}
-	message.AppendData(sessionId + ":" + strconv.FormatUint(rand.Uint64(), 10))
+func buildChatAnswerMessage(message *schema.Message) *sse.Message {
+	msg := &sse.Message{
+		Type: sse.Type(EventTypeOfChatModelAnswer),
+	}
+	msg.AppendData(message.Content)
 
-	return message
+	return msg
+}
+
+func buildChatMessage(_type string, message string) *sse.Message {
+	msg := &sse.Message{
+		Type: sse.Type(_type),
+	}
+	msg.AppendData(message)
+
+	return msg
 }

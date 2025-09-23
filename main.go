@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/caiflower/ai-agent/constants"
 	"github.com/caiflower/ai-agent/controller/v1"
-	"github.com/caiflower/ai-agent/service/caller"
+	"github.com/caiflower/ai-agent/service/agent"
+	"github.com/caiflower/ai-agent/service/xsse"
 	"github.com/caiflower/ai-agent/web"
 	"github.com/caiflower/common-tools/cluster"
 	dbv1 "github.com/caiflower/common-tools/db/v1"
@@ -17,7 +17,6 @@ import (
 	"github.com/caiflower/common-tools/pkg/logger"
 	"github.com/caiflower/common-tools/redis/v1"
 	"github.com/caiflower/common-tools/web/v1"
-	"github.com/tmaxmax/go-sse"
 )
 
 func init() {
@@ -50,8 +49,9 @@ func setBean() {
 
 	// init dao
 
-	// init service
-	bean.AddBean(newSSEProvider())
+	// init entity
+	bean.AddBean(xsse.NewSSEProvider())
+	bean.AddBean(agent.NewAgentRuntime())
 }
 
 func initCluster() {
@@ -59,8 +59,8 @@ func initCluster() {
 		panic(fmt.Sprintf("Init cluster failed. %s", err.Error()))
 	} else {
 		bean.AddBean(c)
-		tracker := cluster.NewDefaultJobTracker(constants.Prop.CallerInterval, c, &caller.DefaultCaller{})
-		tracker.Start()
+		//tracker := cluster.NewDefaultJobTracker(constants.Prop.CallerInterval, c, &caller.DefaultCaller{})
+		//tracker.Start()
 		c.StartUp()
 	}
 }
@@ -88,23 +88,6 @@ func initKafka() {
 
 	producer := kafkav2.NewProducerClient(constants.DefaultConfig.KafkaConfig[0])
 	bean.SetBean("producer", producer)
-}
-
-func newSSEProvider() sse.Provider {
-	rp, _ := sse.NewValidReplayer(time.Minute*5, true)
-	rp.GCInterval = time.Minute
-
-	//server := &sse.Server{
-	//	Provider: &sse.Joe{Replayer: rp},
-	//	Logger: func(r *nethttp.Request) *slog.Logger {
-	//		return slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
-	//	},
-	//	OnSession: func(w nethttp.ResponseWriter, r *nethttp.Request) (topics []string, permitted bool) {
-	//		return []string{}, true
-	//	},
-	//}
-	//server.ServeHTTP()
-	return &sse.Joe{Replayer: rp}
 }
 
 func main() {

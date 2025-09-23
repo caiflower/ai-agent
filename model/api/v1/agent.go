@@ -2,14 +2,14 @@ package apiv1
 
 import (
 	"github.com/caiflower/ai-agent/model/api"
+	"github.com/caiflower/ai-agent/model/entity"
 	"github.com/caiflower/common-tools/web"
 )
 
-type SchedulingRequest struct {
+type ChatRequest struct {
 	api.Request
 	web.Context
-	SessionId string `verf:""`
+	Input string `json:"input"`
 }
 
-type SchedulingResponse struct {
-}
+type ChatEvent = entity.AgentRespEvent
