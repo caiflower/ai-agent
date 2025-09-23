@@ -13,7 +13,7 @@ import (
 	"github.com/cloudwego/eino/schema"
 )
 
-func newReplyCallback(_ context.Context, executeID string, _ map[string]struct{}) (clb callbacks.Handler,
+func newReplyCallback(executeID string, _ map[string]struct{}) (clb callbacks.Handler,
 	sr *schema.StreamReader[*entity.AgentRespEvent], sw *schema.StreamWriter[*entity.AgentRespEvent],
 ) {
 	sr, sw = schema.Pipe[*entity.AgentRespEvent](10)

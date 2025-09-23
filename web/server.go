@@ -5,7 +5,7 @@ import (
 )
 
 func StartUp() {
-	DefaultHttpServer.AddInterceptor(&userInterceptor{}, 1)
+	DefaultHttpServer.AddInterceptor(NewUserInterceptor(), 1)
 
 	// register
 	register()

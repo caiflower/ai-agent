@@ -6,6 +6,7 @@ import (
 	"github.com/caiflower/ai-agent/constants"
 	"github.com/caiflower/ai-agent/controller/v1"
 	"github.com/caiflower/ai-agent/service/agent"
+	chatmodel "github.com/caiflower/ai-agent/service/model"
 	"github.com/caiflower/ai-agent/service/xsse"
 	"github.com/caiflower/ai-agent/web"
 	"github.com/caiflower/common-tools/cluster"
@@ -52,6 +53,8 @@ func setBean() {
 	// init entity
 	bean.AddBean(xsse.NewSSEProvider())
 	bean.AddBean(agent.NewAgentRuntime())
+	bean.AddBean(agent.NewSingleAgent())
+	bean.AddBean(chatmodel.NewDefaultFactory())
 }
 
 func initCluster() {

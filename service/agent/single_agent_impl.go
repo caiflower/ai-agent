@@ -1,12 +1,14 @@
 package agent
 
 import (
+	"context"
 	"errors"
 	"runtime/debug"
 	"time"
 
+	"github.com/caiflower/ai-agent/constants"
 	entity "github.com/caiflower/ai-agent/model/entity"
-	golocalv1 "github.com/caiflower/common-tools/pkg/golocal/v1"
+	"github.com/caiflower/ai-agent/service/model"
 	"github.com/caiflower/common-tools/pkg/logger"
 	"github.com/caiflower/common-tools/pkg/safego"
 	"github.com/cloudwego/eino/components/prompt"
@@ -22,6 +24,7 @@ const (
 )
 
 type singleAgentImpl struct {
+	Factory chatmodel.Factory `autowired:""`
 }
 
 func NewSingleAgent() SingleAgent {
@@ -31,11 +34,10 @@ func NewSingleAgent() SingleAgent {
 func (sa *singleAgentImpl) StreamExecute(req *entity.AgentRequest) (*schema.StreamReader[*entity.AgentRespEvent], error) {
 	var (
 		g           = compose.NewGraph[*entity.AgentRequest, *schema.Message]()
-		ctx         = golocalv1.GetContext()
 		composeOpts []compose.Option
 		pv          = promptVariables{}
-
-		pt = prompt.FromMessages(
+		ctx         = context.Background()
+		pt          = prompt.FromMessages(
 			schema.Jinja2,
 			schema.SystemMessage(ReactSystemPromptJinja2),
 			schema.MessagesPlaceholder(placeholderOfChatHistory, true),
@@ -45,12 +47,12 @@ func (sa *singleAgentImpl) StreamExecute(req *entity.AgentRequest) (*schema.Stre
 	)
 
 	//callback handle
-	hdl, sr, sw := newReplyCallback(ctx, executeID.String(), nil)
+	hdl, sr, sw := newReplyCallback(executeID.String(), nil)
 	composeOpts = append(composeOpts, compose.WithCallbacks(hdl))
 
-	chatModel, err := newOllamaModel(ctx)
+	chatModel, err := sa.Factory.CreateChatModel(req.ChatProtocol, buildConfig(req))
 	if err != nil {
-		logger.Error("create model failed. Error: %v", err)
+		logger.Error("create cmodel failed. Error: %v", err)
 		return nil, err
 	}
 
@@ -83,4 +85,14 @@ func (sa *singleAgentImpl) StreamExecute(req *entity.AgentRequest) (*schema.Stre
 	})
 
 	return sr, nil
+}
+
+func buildConfig(req *entity.AgentRequest) (cfg *chatmodel.Config) {
+	cfg = &chatmodel.Config{}
+	switch req.ChatProtocol {
+	case chatmodel.ProtocolOllama:
+		cfg.BaseURL = constants.Prop.OLlama.Url
+		cfg.Model = constants.Prop.OLlama.Model
+	}
+	return
 }

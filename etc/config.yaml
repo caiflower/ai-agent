@@ -1,1 +1,5 @@
 caller_interval: 10
+
+ollama:
+  url: http://ollama-svc.ollama.svc.cluster.local:80
+  model: Qwen3-0.6B:latest

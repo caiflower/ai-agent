@@ -1,12 +1,14 @@
 package entity
 
 import (
+	chatmodel "github.com/caiflower/ai-agent/service/model"
 	"github.com/cloudwego/eino/schema"
 )
 
 type AgentRequest struct {
-	Input   *schema.Message
-	History []*schema.Message
+	Input        *schema.Message
+	History      []*schema.Message
+	ChatProtocol chatmodel.Protocol
 }
 
 type EventType string

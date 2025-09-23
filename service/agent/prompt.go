@@ -66,7 +66,7 @@ func (p *promptVariables) AssemblePromptVariables(_ context.Context, req *entity
 	variables = make(map[string]any)
 
 	variables[placeholderOfTime] = time.Now().Format("Monday 2006/01/02 15:04:05 -07")
-	variables[placeholderOfAgentName] = constants.Prop.Llama.AgentName
+	variables[placeholderOfAgentName] = constants.Prop.Prompt.AgentName
 
 	if req.Input != nil {
 		variables[placeholderOfUserInput] = []*schema.Message{req.Input}

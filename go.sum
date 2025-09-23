@@ -62,8 +62,8 @@ github.com/bytedance/sonic v1.14.0/go.mod h1:WoEbx8WTcFJfzCe0hbmyTGrfjt8PzNEBdxl
 github.com/bytedance/sonic/loader v0.1.1/go.mod h1:ncP89zfokxS5LZrJxl5z0UJcsk4M4yY2JpfqGeCtNLU=
 github.com/bytedance/sonic/loader v0.3.0 h1:dskwH8edlzNMctoruo8FPTJDF3vLtDT0sXZwvZJyqeA=
 github.com/bytedance/sonic/loader v0.3.0/go.mod h1:N8A3vUdtUebEY2/VQC0MyhYeKUFosQU6FxH2JmUe6VI=
-github.com/caiflower/common-tools v0.0.0-20250923053525-e27862abbc0c h1:b772oFyCU5u3RWxN3c6w+Z+KA21nIk4zzI/DKQofJ8c=
-github.com/caiflower/common-tools v0.0.0-20250923053525-e27862abbc0c/go.mod h1:B3HNBLXPBygx8ABZIDu361566031pyWCa/hrDVU0anI=
+github.com/caiflower/common-tools v0.0.0-20250926080746-1f33727f497c h1:yU38onPcajx+o1EJBUzYbIogNwVC/whLqGqR015t6Ic=
+github.com/caiflower/common-tools v0.0.0-20250926080746-1f33727f497c/go.mod h1:B3HNBLXPBygx8ABZIDu361566031pyWCa/hrDVU0anI=
 github.com/caiflower/json-iterator v1.1.12 h1:WpdqSe44A9GKcTNw7DkDNNJUQNM7tM4RHbNRx5edkjQ=
 github.com/caiflower/json-iterator v1.1.12/go.mod h1:5ADwiSgC1VslIB/m72eUebZfXV/cUSEE7ZGntUPpmz8=
 github.com/cenkalti/backoff/v4 v4.3.0 h1:MyRJ/UdXutAwSAT+s3wNd7MfTIcy71VQueUuFK343L8=

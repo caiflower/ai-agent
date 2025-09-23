@@ -17,10 +17,15 @@ func InitConfig() {
 }
 
 type Config struct {
-	Llama Llama
+	Prompt PromptConfig `yaml:"prompt"`
+	OLlama OLlamaConfig `yaml:"ollama"`
 }
 
-type Llama struct {
-	AgentName string `yaml:"agentName"`
-	OllamaUrl string `yaml:"ollamaUrl"`
+type PromptConfig struct {
+	AgentName string `yaml:"agentName" default:"全能助手"`
+}
+
+type OLlamaConfig struct {
+	Url   string `yaml:"url"`
+	Model string `yaml:"model"`
 }

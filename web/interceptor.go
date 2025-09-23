@@ -4,9 +4,14 @@ import (
 	"github.com/caiflower/ai-agent/constants"
 	"github.com/caiflower/common-tools/web"
 	"github.com/caiflower/common-tools/web/e"
+	"github.com/caiflower/common-tools/web/interceptor"
 )
 
 type userInterceptor struct {
+}
+
+func NewUserInterceptor() interceptor.Interceptor {
+	return &userInterceptor{}
 }
 
 func (i *userInterceptor) Before(ctx *web.Context) e.ApiError {

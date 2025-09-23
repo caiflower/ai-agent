@@ -5,7 +5,7 @@ go 1.24.0
 replace github.com/json-iterator/go v1.1.12 => github.com/caiflower/json-iterator v1.1.12
 
 require (
-	github.com/caiflower/common-tools v0.0.0-20250923053525-e27862abbc0c
+	github.com/caiflower/common-tools v0.0.0-20250926080746-1f33727f497c
 	github.com/cloudwego/eino v0.5.3
 	github.com/cloudwego/eino-ext/components/model/ollama v0.1.2
 	github.com/google/uuid v1.6.0

@@ -47,7 +47,8 @@ func (c *agentController) Chat(request *apiv1.ChatRequest) e.ApiError {
 	)
 
 	sr, err := c.AgentRuntime.Run(&entity.AgentRequest{
-		Input: schema.UserMessage(request.Input),
+		Input:        schema.UserMessage(request.Input),
+		ChatProtocol: request.ChatProtocol,
 	})
 	if err != nil {
 		logger.Error("agent run failed. Error: %v", err)
