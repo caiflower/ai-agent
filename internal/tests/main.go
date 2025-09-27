@@ -2,5 +2,6 @@ package main
 
 func main() {
 	//simpleAgent()
-	reactAgent()
+	//reactAgent()
+	mcpDemo()
 }
