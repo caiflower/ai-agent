@@ -56,9 +56,9 @@ func (sa *singleAgentImpl) StreamExecute(req *entity.AgentRequest) (*schema.Stre
 		return nil, err
 	}
 
-	_ = g.AddLambdaNode(keyOfPromptVariables, compose.InvokableLambda[*entity.AgentRequest, map[string]any](pv.AssemblePromptVariables))
-	_ = g.AddChatTemplateNode(keyOfPromptTemplate, pt)
-	_ = g.AddChatModelNode(KeyofChatModelNode, chatModel, compose.WithNodeName("ChatModel"))
+	_ = g.AddLambdaNode(keyOfPromptVariables, compose.InvokableLambda[*entity.AgentRequest, map[string]any](pv.AssemblePromptVariables), compose.WithNodeName(keyOfPromptVariables))
+	_ = g.AddChatTemplateNode(keyOfPromptTemplate, pt, compose.WithNodeName(keyOfPromptTemplate))
+	_ = g.AddChatModelNode(KeyofChatModelNode, chatModel, compose.WithNodeName(KeyofChatModelNode))
 
 	_ = g.AddEdge(compose.START, keyOfPromptVariables)
 	_ = g.AddEdge(keyOfPromptVariables, keyOfPromptTemplate)

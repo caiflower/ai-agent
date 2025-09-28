@@ -68,7 +68,7 @@ func (r *replyChunkCallback) OnEndWithStreamOutput(ctx context.Context, info *ca
 
 	switch info.Component {
 	case components.ComponentOfChatModel:
-		if info.Name != "ChatModel" {
+		if info.Name != KeyofChatModelNode {
 			output.Close()
 			return ctx
 		}

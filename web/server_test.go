@@ -36,7 +36,7 @@ func TestChat(t *testing.T) {
 		Port: 8081,
 	})
 	factory := mockchatmodel.NewMockFactory(ctl)
-	factory.EXPECT().CreateChatModel(chatmodel.ProtocolMock, &chatmodel.Config{}).Return(&chatmodel.MockChatModel{}, nil)
+	factory.EXPECT().CreateChatModel(chatmodel.ProtocolMock, &chatmodel.Config{}).Return(&chatmodel.MockChatModel{}, nil).AnyTimes()
 
 	bean.AddBean(xsse.NewSSEProvider())
 	bean.AddBean(agent.NewAgentRuntime())
@@ -56,15 +56,13 @@ func TestChat(t *testing.T) {
 }
 
 func chatV1(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 	c := xhttp.NewHttpClient(xhttp.Config{})
 
 	mockCompare(t,
 		"Not login",
 		c,
 		http.MethodGet,
-		"http://127.0.0.1:8081/v1/chat?input=%E4%BB%8B%E7%BB%8D%E4%B8%80%E4%B8%8B%E5%8C%97%E4%BA%AC&chatProtocol=mock",
+		"http://127.0.0.1:8081/v1/chat?input=what%20is%20weather%20in%20beijing?&chatProtocol=mock",
 		nil,
 		nil,
 		&CommonResponse{
@@ -80,7 +78,7 @@ func chatV1(t *testing.T) {
 	mockCompare(t,
 		"Missing chatProtocol",
 		c, http.MethodGet,
-		"http://127.0.0.1:8081/v1/chat?input=%E4%BB%8B%E7%BB%8D%E4%B8%80%E4%B8%8B%E5%8C%97%E4%BA%AC",
+		"http://127.0.0.1:8081/v1/chat?input=what%20is%20weather%20in%20beijing?",
 		headers,
 		nil,
 		&CommonResponse{
@@ -108,7 +106,7 @@ func chatV1(t *testing.T) {
 	mockCompare(t,
 		"ChatProtocol not in list",
 		c, http.MethodGet,
-		"http://127.0.0.1:8081/v1/chat?input=%E4%BB%8B%E7%BB%8D%E4%B8%80%E4%B8%8B%E5%8C%97%E4%BA%AC&chatProtocol=test",
+		"http://127.0.0.1:8081/v1/chat?input=what%20is%20weather%20in%20beijing?&chatProtocol=test",
 		headers,
 		nil,
 		&CommonResponse{
@@ -119,9 +117,9 @@ func chatV1(t *testing.T) {
 			},
 		})
 
-	req, _ := http.NewRequestWithContext(ctx,
+	req, _ := http.NewRequestWithContext(context.Background(),
 		http.MethodGet,
-		"http://127.0.0.1:8081/v1/chat?input=%E4%BB%8B%E7%BB%8D%E4%B8%80%E4%B8%8B%E5%8C%97%E4%BA%AC&chatProtocol=mock",
+		"http://127.0.0.1:8081/v1/chat?input=what%20is%20weather%20in%20beijing?&chatProtocol=mock",
 		http.NoBody)
 	req.Header.Set("X-User-Id", "test-user")
 
@@ -132,9 +130,10 @@ func chatV1(t *testing.T) {
 	}
 
 	message := ""
+breakPoint:
 	for ev, err := range sse.Read(res.Body, nil) {
 		if err != nil {
-			assert.Contains(t, err.Error(), "cancel")
+			assert.Fail(t, err.Error(), "unknown error")
 			break
 		}
 		switch ev.Type {
@@ -142,13 +141,14 @@ func chatV1(t *testing.T) {
 			message += ev.Data
 		case v1.EventTypeOfChatError:
 			logger.Error("chat failed. Error: %v", ev.Data)
-			cancel()
 		case v1.EventTypeOfChatFinish:
-			cancel()
+			logger.Info("chat finished")
+			break breakPoint
 		}
 	}
 
-	assert.Equal(t, message, "the weather is good")
+	assert.NotEmpty(t, res.Header.Get("X-Request-Id"), "request id found")
+	assert.Equal(t, "the weather is good", message)
 }
 
 func mockCompare(t *testing.T, testCaseName string, c xhttp.HttpClient, method string, url string, headers map[string]string, body interface{}, want *CommonResponse) {

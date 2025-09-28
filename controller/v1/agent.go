@@ -8,6 +8,7 @@ import (
 	apiv1 "github.com/caiflower/ai-agent/model/api/v1"
 	entity "github.com/caiflower/ai-agent/model/entity"
 	"github.com/caiflower/ai-agent/service/agent"
+	golocalv1 "github.com/caiflower/common-tools/pkg/golocal/v1"
 	"github.com/caiflower/common-tools/pkg/logger"
 	"github.com/caiflower/common-tools/pkg/safego"
 	"github.com/caiflower/common-tools/web"
@@ -55,7 +56,9 @@ func (c *agentController) Chat(request *apiv1.ChatRequest) e.ApiError {
 		return e.NewInternalError(err)
 	}
 
+	ctx, cancel := context.WithCancel(golocalv1.GetContext())
 	safego.Go(func() {
+		defer cancel()
 		for {
 			chatEventRecv, recvErr := sr.Recv()
 			if recvErr != nil {
@@ -80,7 +83,9 @@ func (c *agentController) Chat(request *apiv1.ChatRequest) e.ApiError {
 						logger.Error("chat receive failed. Error: %v", recvErr)
 						return
 					}
-					_ = c.SSEProvider.Publish(buildChatAnswerMessage(message), topics)
+					if message.Content != "" {
+						_ = c.SSEProvider.Publish(buildChatAnswerMessage(message), topics)
+					}
 				}
 			default:
 				logger.Warn("chat receive unknown event: %v", chatEventRecv.EventType)
@@ -88,7 +93,7 @@ func (c *agentController) Chat(request *apiv1.ChatRequest) e.ApiError {
 		}
 	})
 
-	sseErr := c.beginSse(topics, &request.Context)
+	sseErr := c.beginSse(ctx, topics, &request.Context)
 	if sseErr != nil {
 		return e.NewInternalError(sseErr)
 	}
@@ -96,9 +101,10 @@ func (c *agentController) Chat(request *apiv1.ChatRequest) e.ApiError {
 	return nil
 }
 
-func (c *agentController) beginSse(sessionIds []string, webCtx *web.Context) error {
+func (c *agentController) beginSse(ctx context.Context, sessionIds []string, webCtx *web.Context) error {
 	logger.Info("beginSse sessionIds %s", sessionIds)
 	w, r := webCtx.GetResponseWriterAndRequest()
+	w.Header().Add("X-Request-Id", sessionIds[0])
 	sess, err := sse.Upgrade(w, r)
 	if err != nil {
 		logger.Error("upgrade xsse failed. Error: %v", err)
@@ -107,7 +113,7 @@ func (c *agentController) beginSse(sessionIds []string, webCtx *web.Context) err
 
 	sub := sse.Subscription{Client: sess, LastEventID: sess.LastEventID, Topics: sessionIds}
 
-	err = c.SSEProvider.Subscribe(r.Context(), sub)
+	err = c.SSEProvider.Subscribe(ctx, sub)
 	if err != nil {
 		logger.Error("xsse subscribe failed. Error: %v", err)
 		return err

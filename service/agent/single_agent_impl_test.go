@@ -49,5 +49,5 @@ func TestAgentStreamExecute(t *testing.T) {
 		message += chunk.Content
 	}
 
-	assert.Equal(t, message, "the weather is good")
+	assert.Equal(t, "the weather is good", message)
 }
